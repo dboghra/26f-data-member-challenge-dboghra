@@ -1,18 +1,3 @@
-"""
-Data Cleaning Module for Developer Salary Prediction
-======================================================
-
-This module handles all data preprocessing:
-- Removing incomplete records (missing salary, experience, education)
-- Encoding categorical variables (age ranges, education levels, employment status)
-- Splitting data into training and test sets
-- Providing utility functions for exploration
-
-Usage:
-    from clean_data import load_and_clean_data
-    X_train, X_test, y_train, y_test = load_and_clean_data('data/survey.csv')
-"""
-
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -21,12 +6,8 @@ from sklearn.model_selection import train_test_split
 def load_data(filepath):
     """
     Load the survey data from CSV.
-    
-    Args:
-        filepath (str): Path to the CSV file
-        
-    Returns:
-        pd.DataFrame: Raw data
+    Args:filepath (str): Path to the CSV file   
+    Returns:pd.DataFrame: Raw data
     """
     print(f"Loading data from {filepath}...")
     df = pd.read_csv(filepath)
@@ -37,12 +18,9 @@ def load_data(filepath):
 def remove_missing_salary(df):
     """
     Remove rows where the target variable (salary) is missing.
-    
-    Args:
-        df (pd.DataFrame): Raw data
+    Args:df (pd.DataFrame): Raw data
         
-    Returns:
-        pd.DataFrame: Data with valid salary values
+    Returns:pd.DataFrame: Data with valid salary values
     """
     initial_count = len(df)
     df = df.dropna(subset=['annual_salary_usd'])
@@ -58,14 +36,9 @@ def remove_missing_salary(df):
 def remove_missing_experience(df):
     """
     Remove rows with missing work experience or coding experience.
-    
     These are critical features that can't be reasonably estimated.
-    
-    Args:
-        df (pd.DataFrame): Data with valid salaries
-        
-    Returns:
-        pd.DataFrame: Data with valid experience values
+    Args:df (pd.DataFrame): Data with valid salaries  
+    Returns:pd.DataFrame: Data with valid experience values
     """
     initial_count = len(df)
     df = df.dropna(subset=['WorkExp', 'YearsCode'])
@@ -81,14 +54,10 @@ def remove_missing_experience(df):
 def remove_missing_education(df):
     """
     Remove rows with missing education level.
-    
     Education is a key predictor and should not be imputed.
-    
-    Args:
-        df (pd.DataFrame): Data with valid experience
+    Args:df (pd.DataFrame): Data with valid experience
         
-    Returns:
-        pd.DataFrame: Data with valid education values
+    Returns:pd.DataFrame: Data with valid education values
     """
     initial_count = len(df)
     df = df.dropna(subset=['EdLevel'])
@@ -104,17 +73,12 @@ def remove_missing_education(df):
 def encode_age(df):
     """
     Convert age ranges (categorical) to single numeric values (midpoints).
-    
     Example:
         '18-24 years old' → 21
         '25-34 years old' → 29.5
         '35-44 years old' → 39.5
-    
-    Args:
-        df (pd.DataFrame): Data with Age column
-        
-    Returns:
-        pd.DataFrame: Data with Age_numeric column added
+    Args:df (pd.DataFrame): Data with Age column 
+    Returns:pd.DataFrame: Data with Age_numeric column added
     """
     age_mapping = {
         '18-24 years old': 21,
@@ -143,7 +107,6 @@ def encode_age(df):
 def encode_education(df):
     """
     Convert education levels (categorical) to numeric ordinal scale (1-7).
-    
     The scale respects the hierarchy of education:
         1 = Primary/elementary school
         2 = Secondary school (high school)
@@ -152,12 +115,8 @@ def encode_education(df):
         5 = Bachelor's degree
         6 = Master's degree
         7 = Professional degree (PhD, MD, JD, etc.)
-    
-    Args:
-        df (pd.DataFrame): Data with EdLevel column
-        
-    Returns:
-        pd.DataFrame: Data with EdLevel_numeric column added
+    Args:df (pd.DataFrame): Data with EdLevel column
+    Returns:pd.DataFrame: Data with EdLevel_numeric column added
     """
     education_order = {
         'Primary/elementary school': 1,
@@ -192,15 +151,10 @@ def encode_education(df):
 def encode_employment(df):
     """
     Convert employment status to binary (0 or 1).
-    
     1 = Employed (full-time)
     0 = Other (freelance, student, retired, etc.)
-    
-    Args:
-        df (pd.DataFrame): Data with Employment column
-        
-    Returns:
-        pd.DataFrame: Data with IsEmployed column added
+    Args:df (pd.DataFrame): Data with Employment column   
+    Returns:pd.DataFrame: Data with IsEmployed column added
     """
     df = df.copy()
     df['IsEmployed'] = (df['Employment'] == 'Employed').astype(int)
@@ -218,15 +172,10 @@ def encode_employment(df):
 def encode_manager_status(df):
     """
     Convert role to binary manager status (0 or 1).
-    
     1 = People manager
     0 = Individual contributor
-    
-    Args:
-        df (pd.DataFrame): Data with ICorPM column
-        
-    Returns:
-        pd.DataFrame: Data with IsPeopleManager column added
+    Args:df (pd.DataFrame): Data with ICorPM column  
+    Returns:pd.DataFrame: Data with IsPeopleManager column added
     """
     df = df.copy()
     
@@ -247,7 +196,6 @@ def encode_manager_status(df):
 def encode_org_size(df):
     """
     Convert organization size to numeric ordinal scale (1-8).
-    
     The scale reflects company size impact on salary:
         1 = Solo freelancer
         2 = Less than 20 employees
@@ -257,12 +205,8 @@ def encode_org_size(df):
         6 = 1,000-4,999 employees
         7 = 5,000-9,999 employees
         8 = 10,000+ employees
-    
-    Args:
-        df (pd.DataFrame): Data with OrgSize column
-        
-    Returns:
-        pd.DataFrame: Data with OrgSize_numeric column added
+    Args:df (pd.DataFrame): Data with OrgSize column
+    Returns:pd.DataFrame: Data with OrgSize_numeric column added
     """
     org_order = {
         'Just me - I am a freelancer, sole proprietor, etc.': 1,
@@ -299,20 +243,14 @@ def encode_org_size(df):
 def encode_remote_work(df):
     """
     Convert remote work status to one-hot encoded binary columns.
-    
     Creates separate binary columns for each remote work type:
     - Remote_In-person
     - Remote_Hybrid-remote
     - Remote_Hybrid-flexibility
     - Remote_YourChoice
-    
     The "Remote" category is the reference (dropped to avoid collinearity).
-    
-    Args:
-        df (pd.DataFrame): Data with RemoteWork column
-        
-    Returns:
-        tuple: (df with original columns, dummy_df with binary columns)
+    Args:df (pd.DataFrame): Data with RemoteWork column
+    Returns:tuple: (df with original columns, dummy_df with binary columns)
     """
     df = df.copy()
     
@@ -333,7 +271,6 @@ def encode_remote_work(df):
 def build_feature_matrix(df, remote_dummies):
     """
     Combine all encoded features into a single feature matrix.
-    
     This includes:
     - Age_numeric
     - EdLevel_numeric
@@ -343,13 +280,10 @@ def build_feature_matrix(df, remote_dummies):
     - IsPeopleManager
     - OrgSize_numeric
     - Remote work binary columns
-    
     Args:
         df (pd.DataFrame): Data with encoded features
-        remote_dummies (pd.DataFrame): One-hot encoded remote work columns
-        
-    Returns:
-        tuple: (X, y) where X is feature matrix and y is target (salary)
+        remote_dummies (pd.DataFrame): One-hot encoded remote work columns  
+    Returns:tuple: (X, y) where X is feature matrix and y is target (salary)
     """
     # Select numeric features
     X = pd.concat([
@@ -374,15 +308,12 @@ def build_feature_matrix(df, remote_dummies):
 def split_data(X, y, test_size=0.2, random_state=42):
     """
     Split data into training and test sets.
-    
     Args:
         X (pd.DataFrame): Feature matrix
         y (pd.Series): Target variable (salary)
         test_size (float): Proportion of data to use for testing (default 0.2 = 20%)
         random_state (int): Seed for reproducibility (default 42)
-        
-    Returns:
-        tuple: (X_train, X_test, y_train, y_test)
+    Returns:tuple: (X_train, X_test, y_train, y_test)
     """
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=random_state
@@ -399,14 +330,11 @@ def split_data(X, y, test_size=0.2, random_state=42):
 def load_and_clean_data(filepath, test_size=0.2, random_state=42):
     """
     Main function: Load raw data and perform all cleaning/encoding steps.
-    
     This is the function you'll call from main.py.
-    
     Args:
         filepath (str): Path to the survey CSV file
         test_size (float): Proportion for test set (default 0.2)
         random_state (int): Seed for reproducibility
-        
     Returns:
         tuple: (X_train, X_test, y_train, y_test, feature_names)
                where feature_names is a list of feature column names
