@@ -4,40 +4,53 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
 
-def train_random_forest(X_train, y_train, n_estimators=100, random_state=42):
-    """
-    Train a random forest model on training data.
+# def train_random_forest(X_train, y_train, n_estimators=20, random_state=42):
+#     """
+#     Train a random forest model on training data.
     
-    Random Forest is an ensemble method that:
-    - Builds multiple decision trees
-    - Each tree learns from a random subset of features and data
-    - Final prediction is the average of all tree predictions
-    - More robust to overfitting than single decision trees
+#     Random Forest is an ensemble method that:
+#     - Builds multiple decision trees
+#     - Each tree learns from a random subset of features and data
+#     - Final prediction is the average of all tree predictions
+#     - More robust to overfitting than single decision trees
     
-    Args:
-        X_train (pd.DataFrame): Training features (n_samples × n_features)
-        y_train (pd.Series): Training target values (salary)
-        n_estimators (int): Number of trees to build (default 100)
-        random_state (int): Seed for reproducibility (default 42)
+#     Args:
+#         X_train (pd.DataFrame): Training features (n_samples × n_features)
+#         y_train (pd.Series): Training target values (salary)
+#         n_estimators (int): Number of trees to build (default 100)
+#         random_state (int): Seed for reproducibility (default 42)
         
-    Returns:
-        RandomForestRegressor: Fitted model ready for predictions
-    """
-    print("="*70)
-    print("RANDOM FOREST MODEL")
-    print("="*70)
-    print()
+#     Returns:
+#         RandomForestRegressor: Fitted model ready for predictions
+#     """
+#     print("="*70)
+#     print("RANDOM FOREST MODEL")
+#     print("="*70)
+#     print()
     
-    print(f"Training random forest with {n_estimators} trees...")
+#     print(f"Training random forest with {n_estimators} trees...")
+#     model = RandomForestRegressor(
+#         n_estimators=n_estimators,
+#         random_state=random_state,
+#         n_jobs=-1,  # Use all CPU cores for faster training
+#         verbose=0   # Don't print tree-by-tree progress
+#     )
+#     model.fit(X_train, y_train)
+#     print(f"✓ Model trained successfully ({n_estimators} trees)\n")
+    
+#     return model
+
+def train_random_forest(X_train, y_train, n_estimators=20, random_state=42):
     model = RandomForestRegressor(
-        n_estimators=n_estimators,
+        n_estimators=20,
+        max_depth=8,                 # LIMIT DEPTH
+        min_samples_split=20,        # Don't split tiny groups
+        min_samples_leaf=10,         # Leaves need 10+ samples
+        max_features='sqrt',         # Use sqrt(features) per tree
         random_state=random_state,
-        n_jobs=-1,  # Use all CPU cores for faster training
-        verbose=0   # Don't print tree-by-tree progress
+        n_jobs=-1
     )
     model.fit(X_train, y_train)
-    print(f"✓ Model trained successfully ({n_estimators} trees)\n")
-    
     return model
 
 
