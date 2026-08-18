@@ -1,28 +1,42 @@
-#linear regression  logic here
-
 import pandas as pd
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 
 
-def train_linear_regression(X_train, y_train):
+def train_random_forest(X_train, y_train, n_estimators=100, random_state=42):
     """
-    Train a linear regression model on training data.
+    Train a random forest model on training data.
+    
+    Random Forest is an ensemble method that:
+    - Builds multiple decision trees
+    - Each tree learns from a random subset of features and data
+    - Final prediction is the average of all tree predictions
+    - More robust to overfitting than single decision trees
+    
     Args:
         X_train (pd.DataFrame): Training features (n_samples × n_features)
-        y_train (pd.Series): Training target values (salary)  
-    Returns:LinearRegression: Fitted model ready for predictions
+        y_train (pd.Series): Training target values (salary)
+        n_estimators (int): Number of trees to build (default 100)
+        random_state (int): Seed for reproducibility (default 42)
+        
+    Returns:
+        RandomForestRegressor: Fitted model ready for predictions
     """
     print("="*70)
-    print("LINEAR REGRESSION MODEL")
+    print("RANDOM FOREST MODEL")
     print("="*70)
     print()
     
-    print("Training linear regression model...")
-    model = LinearRegression()
+    print(f"Training random forest with {n_estimators} trees...")
+    model = RandomForestRegressor(
+        n_estimators=n_estimators,
+        random_state=random_state,
+        n_jobs=-1,  # Use all CPU cores for faster training
+        verbose=0   # Don't print tree-by-tree progress
+    )
     model.fit(X_train, y_train)
-    print("✓ Model trained successfully\n")
+    print(f"✓ Model trained successfully ({n_estimators} trees)\n")
     
     return model
 
@@ -32,7 +46,7 @@ def evaluate_model(model, X_test, y_test):
     Evaluate the trained model on test data.
     
     Args:
-        model (LinearRegression): Fitted model
+        model (RandomForestRegressor): Fitted model
         X_test (pd.DataFrame): Test features
         y_test (pd.Series): Test target values (actual salaries)
         
@@ -78,22 +92,36 @@ def evaluate_model(model, X_test, y_test):
 
 def get_feature_importance(model, feature_names):
     """
-    Extract feature importance (coefficients) from the trained model.
+    Extract feature importance from the trained random forest model.
+    
+    In random forest, feature importance is based on how much each feature
+    decreases impurity (variance) across all trees in the forest.
+    
+    Unlike linear regression coefficients, these importances are:
+    - Always non-negative (0 to 1, sum to 1.0)
+    - Relative importance (percentage contribution)
+    - Harder to interpret (not in dollars)
+    
+    Example:
+        Remote_Remote importance = 0.25
+        Means: This feature accounts for 25% of the variance explained
+        
     Args:
-        model (LinearRegression): Fitted model
+        model (RandomForestRegressor): Fitted model
         feature_names (list): List of feature column names
+        
     Returns:
-        pd.DataFrame: DataFrame with features and their coefficients,
-                     sorted by absolute value (largest impact first)
+        pd.DataFrame: DataFrame with features and their importance scores,
+                     sorted by importance (largest first)
     """
-    # Create dataframe with feature names and coefficients
+    # Create dataframe with feature names and importances
     importance_df = pd.DataFrame({
         'Feature': feature_names,
-        'Coefficient': model.coef_
+        'Importance': model.feature_importances_
     })
     
-    # Sort by absolute value of coefficient (largest impact first)
-    importance_df = importance_df.sort_values('Coefficient', key=abs, ascending=False)
+    # Sort by importance (largest first)
+    importance_df = importance_df.sort_values('Importance', ascending=False)
     
     # Reset index for clean display
     importance_df = importance_df.reset_index(drop=True)
@@ -108,26 +136,28 @@ def print_feature_importance(model, feature_names):
     Shows which features have the biggest impact on salary predictions.
     
     Args:
-        model (LinearRegression): Fitted model
+        model (RandomForestRegressor): Fitted model
         feature_names (list): List of feature column names
     """
     importance_df = get_feature_importance(model, feature_names)
     
-    print("Feature Importance (Model Coefficients)")
+    print("Feature Importance (Random Forest)")
     print("="*70)
-    print(f"\nBase salary (intercept): ${model.intercept_:,.0f}")
-    print("(This is the predicted salary when all features are 0)\n")
-    
-    print("How each feature affects salary prediction (in dollars):")
+    print("\nHow much each feature contributes to predictions:")
+    print("(Higher = more important. All sum to 1.0)")
     print("-"*70)
     
     for idx, row in importance_df.iterrows():
         feature = row['Feature']
-        coef = row['Coefficient']
-        direction = "↑" if coef > 0 else "↓"
+        importance = row['Importance']
+        percentage = importance * 100
+        
+        # Create a simple bar chart
+        bar_length = int(percentage / 2)  # Scale for display
+        bar = "█" * bar_length
         
         # Format the output nicely
-        print(f"{direction} {feature:<50} ${coef:>12,.0f}")
+        print(f"{feature:<50} {percentage:>6.2f}%  {bar}")
     
     print()
 
@@ -135,10 +165,13 @@ def print_feature_importance(model, feature_names):
 def compare_to_baseline(y_test, y_pred):
     """
     Compare model performance to a naive baseline.
+    
     Baseline = always predicting the mean salary
+    
     Args:
         y_test (pd.Series): Actual test salaries
-        y_pred (np.array): Model predictions 
+        y_pred (np.array): Model predictions
+        
     Returns:
         dict: Comparison metrics
     """
@@ -155,7 +188,7 @@ def compare_to_baseline(y_test, y_pred):
     print("Comparison to Baseline")
     print("="*70)
     print(f"\nBaseline (always predict mean salary): ${baseline_mae:,.0f} MAE")
-    print(f"Linear Regression Model:                ${model_mae:,.0f} MAE")
+    print(f"Random Forest Model:                    ${model_mae:,.0f} MAE")
     print(f"Improvement:                            {improvement_pct:+.1f}%")
     print()
     
@@ -197,10 +230,10 @@ def print_prediction_examples(y_test, y_pred, n_examples=10):
 
 if __name__ == '__main__':
     """
-    Test the linear regression module standalone.
+    Test the random forest module standalone.
     
     Run this to test:
-    $ python linear_regression.py
+    $ python random_forest.py
     """
     from clean_data import load_and_clean_data
     
@@ -211,7 +244,7 @@ if __name__ == '__main__':
     print("\n")
     
     # Train model
-    model = train_linear_regression(X_train, y_train)
+    model = train_random_forest(X_train, y_train)
     
     # Evaluate
     metrics = evaluate_model(model, X_test, y_test)
@@ -224,3 +257,4 @@ if __name__ == '__main__':
     
     # Show example predictions
     print_prediction_examples(y_test, metrics['predictions'], n_examples=15)
+
